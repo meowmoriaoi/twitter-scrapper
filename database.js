@@ -12,14 +12,26 @@ const database = {
             charset: 'utf8mb4'
         });
     },
-    insert: async (tableName, post) => {
+    insertTweets: async (tableName, tweet) => {
         await connection.execute(
-            `INSERT INTO ${tableName} (username, twitter_status, replies, retweets, likes, time_added, tweet_url) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [post.username, post.status, post.reply, post.retweet, post.like, post.date, post.url]
+            `INSERT INTO ${tableName} (twitter_status, time_added, url) VALUES (?, ?, ?)`,
+            [tweet.status, tweet.date, tweet.url]
         )
     },
+    getUsers: async (dbname) => {
+        return new Promise(resolve => connection.query('SHOW TABLES', (err, result) => {
+            const user = result.map(table => table[`Tables_in_${dbname}`]);
+            resolve(user);
+        }))
+    },
+    getNewestTweet: async (tableName) => {
+        return new Promise(resolve => connection.query(`SELECT url FROM ${tableName} ORDER BY time LIMIT 1`, (err, result) => {
+            if (result != undefined) resolve(result[0]['url']);
+            resolve(result);
+        }))
+    },
     destroy: async () => {
-        await connection.destroy();
+        await connection.end();
     }
 }
 
